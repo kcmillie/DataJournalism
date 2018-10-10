@@ -28,10 +28,11 @@
   font-family: sans-serif;
   fill: #fff;
   text-anchor: middle;
+  alignment-baseline: middle;
 }
 
 .stateCircle {
-  fill: #89bdd3;
+  fill: #4682B4;
   stroke: #e3e3e3;
 }
 
@@ -40,8 +41,9 @@
   margin: 0;
 }
 
-.d3-tip {
+.tooltip {
   padding: 6px;
+  font-family: sans-serif;
   font-size: 12px;
   line-height: 1;
   line-height: 1.5em;

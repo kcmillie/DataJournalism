@@ -40,7 +40,7 @@ function xScale(data, chosenXAxis) {
 // function used for updating y-scale var upon click on axis label
 function yScale(data, chosenYAxis) {
   var yLinearScale = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d[chosenYAxis] + 5)])
+        .domain([d3.min(data, d => d[chosenYAxis]) - 3, d3.max(data, d => d[chosenYAxis] + 3)])
         .range([height, 0]);
   return yLinearScale;
 }
@@ -70,46 +70,51 @@ function renderYAxes(newYScale, yAxis) {
 // function used for updating circles group with a transition to
 // new circles
 function renderCircles(circlesGroup, newXScale, chosenXaxis, newYScale, chosenYAxis) {
-
   circlesGroup.transition()
     .duration(1000)
     .attr("cx", d => newXScale(d[chosenXAxis]))
     .attr("cy", d => newYScale(d[chosenYAxis]));
-
   return circlesGroup;
 }
 
 // new circles
 function renderforeign(foreignGroup, newXScale, chosenXaxis, newYScale, chosenYAxis) {
-
   foreignGroup.transition()
     .duration(1000)
-    .attr("x", d => newXScale(d[chosenXAxis]))
-    .attr("y", d => newYScale(d[chosenYAxis]));
-
+    .attr("x", d => newXScale(d[chosenXAxis])-25)
+    .attr("y", d => newYScale(d[chosenYAxis])-22);
   return foreignGroup;
 }
 
 function tipXLabel(chosenXAxis){
   if (chosenXAxis === "poverty") {
-      var label = "Poverty:";
+      var label = "In Poverty(%):";
   } else if (chosenXAxis === "age") {
-      var label = "Age:";
+      var label = "Age(Median):";
   } else {
-      var label = "Income: ";
+      var label = "Household Income(Median): ";
   }
-  return label
+  return label;
+}
+
+function tipYLabel(chosenYAxis){
+  if (chosenYAxis === "healthcare") {
+      var label = "Lacks Healthcare (%):";
+  } else if (chosenYAxis === "smokes") {
+      var label = "Smokes(%):";
+  } else {
+      var label = "Obesity(%): ";
+  }
+  return label;
 }
 
 // function used for updating circles group with a transition to
 // new circles
 function renderLetters(lettersGroup, newXScale, chosenXaxis, newYScale, chosenYAxis) {
-
   lettersGroup.transition()
     .duration(1000)
-    .attr("x", d => newXScale(d[chosenXAxis])-7)
-    .attr("y", d => newYScale(d[chosenYAxis])+4.5);
-
+    .attr("x", d => newXScale(d[chosenXAxis]))
+    .attr("y", d => newYScale(d[chosenYAxis]));
   return lettersGroup;
 }
 
@@ -164,9 +169,9 @@ d3.csv("/assets/data/data.csv")
       .append("circle")
       .attr("cx", d => xLinearScale(d[chosenXAxis]))
       .attr("cy", d => yLinearScale(d[chosenYAxis]))
-      .attr("r", "10")
-      .attr("fill", "blue")
-      .attr("opacity", ".7");
+      .attr("r", "12")
+      .attr("opacity", ".8")
+      .attr("class", "stateCircle");
 
     // Step 5: Create foreignobjects
     // ==============================
@@ -174,9 +179,10 @@ d3.csv("/assets/data/data.csv")
       .data(healthData)
       .enter()
       .append("foreignObject")
-      .attr("x", d => xLinearScale(d[chosenXAxis])- 25)
-      .attr("y", d => yLinearScale(d[chosenYAxis]) - 25)
+      .attr("x", d => xLinearScale(d[chosenXAxis])-25)
+      .attr("y", d => yLinearScale(d[chosenYAxis])-22)
       .attr("opacity", ".5")
+      .attr("class", "stateShape")
       .html(function(d) {
         var blah = (`${d.abbr}`).toLowerCase();
         return (`<i class="mg map-us-${blah} mg-3x"></i>`);
@@ -190,14 +196,14 @@ d3.csv("/assets/data/data.csv")
       .append("text")
       .text(function(d) { return d.abbr; })
       .attr("x", function(d) {
-          return xLinearScale(d[chosenXAxis]) - 7.5;
+          return xLinearScale(d[chosenXAxis]);
         })
       .attr("y", function(d) {
-          return yLinearScale(d[chosenYAxis]) + 4.5;
+          return yLinearScale(d[chosenYAxis]);
         })
-      .attr("font-family", "sans-serif")
+      // .attr("font-family", "sans-serif")
       .attr("font-size", "11px")
-      .attr("fill", "white");
+      .attr("class", "stateText");
 
     // Create group for  2 x- axis labels
     var labelsGroup = chartGroup.append("g")
@@ -208,21 +214,21 @@ d3.csv("/assets/data/data.csv")
       .attr("y", 20)
       .attr("value", "poverty") // value to grab for event listener
       .classed("active", true)
-      .text("In Poverty");
+      .text("In Poverty(%)");
 
     var ageLabel = labelsGroup.append("text")
       .attr("x", 0)
       .attr("y", 40)
       .attr("value", "age") // value to grab for event listener
       .classed("inactive", true)
-      .text("Age");
+      .text("Age(Median)");
 
     var incomeLabel = labelsGroup.append("text")
       .attr("x", 0)
       .attr("y", 60)
       .attr("value", "income") // value to grab for event listener
       .classed("inactive", true)
-      .text("Income");
+      .text("Household Income(Median)");
 
     // Create group for  2 y- axis labels
     var labelsYGroup = chartGroup.append("g");
@@ -234,36 +240,33 @@ d3.csv("/assets/data/data.csv")
       .attr("y", 0 - margin.left + 40)
       .attr("x", 0 - (height / 2))
       .attr("dy", "1em")
-      .attr("class", "axisText")
       .attr("value", "healthcare") // value to grab for event listener
       .classed("active", true)
-      .text("Healthcare");
+      .text("Lacks Healthcare(%)");
 
     var smokesLabel = labelsYGroup.append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 0 - margin.left + 20)
       .attr("x", 0 - (height / 2))
       .attr("dy", "1em")
-      .attr("class", "axisText")
       .attr("value", "smokes") // value to grab for event listener
       .classed("inactive", true)
-      .text("Smokes");
+      .text("Smokes(%)");
 
     var obesityLabel = labelsYGroup.append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 0 - margin.left)
       .attr("x", 0 - (height / 2))
       .attr("dy", "1em")
-      .attr("class", "axisText")
       .attr("value", "obesity") // value to grab for event listener
       .classed("inactive", true)
-      .text("Obese");
+      .text("Obese(%)");
 
     var toolTip = d3.tip()
       .attr("class", "tooltip")
       // .offset([80, -60])
       .html(function(d) {
-        return (`<br>State:${d.state} <br>${tipXLabel(chosenXAxis)} ${d[chosenXAxis]}`);
+        return (`State: ${d.state} <br>${tipXLabel(chosenXAxis)} ${d[chosenXAxis]}<br>${tipYLabel(chosenYAxis)} ${d[chosenYAxis]}`);
       });
 
     // Step 7: Create tooltip in the chart
@@ -272,7 +275,7 @@ d3.csv("/assets/data/data.csv")
 
     // Step 8: Create event listeners to display and hide the tooltip
     // ==============================
-    circlesGroup.on("click", function(data) {
+    foreignGroup.on("click", function(data) {
       toolTip.show(data, this);
     })
       // onmouseout event
@@ -349,17 +352,17 @@ d3.csv("/assets/data/data.csv")
         }
       }
     });
-    console.log(healthData)
+    // console.log(healthData)
     labelsYGroup.selectAll("text").on("click", function() {
       // get value of selection
       var value = d3.select(this).attr("value");
-      console.log(value)
+      // console.log(value)
       if (value !== chosenYAxis) {
 
         // replaces chosenXAxis with value
         chosenYAxis = value;
 
-        console.log(chosenYAxis)
+        // console.log(chosenYAxis)
         // updates y scale for new data
         yLinearScale = yScale(healthData, chosenYAxis);
 
